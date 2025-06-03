@@ -1,0 +1,17 @@
+name: CI Pipeline
+
+on: # Runs on every push and pull request
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm install # Installs dependencies
+      - run: npm test # Runs test script
