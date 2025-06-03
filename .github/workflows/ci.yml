@@ -39,9 +39,9 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        - name: Echo job completion
-          if: success()
-          run: echo "Backend job for Node.js ${{ matrix.node-version }} completed successfully!"
+      - name: Echo job completion
+        if: success()
+        run: echo "Backend job for Node.js ${{ matrix.node-version }} completed successfully!"
 
   frontend:
     runs-on: ubuntu-latest
