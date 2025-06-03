@@ -24,18 +24,21 @@ jobs:
         run: |
           cd backend
           npm test | tee test-results.log
+          echo "Build finished successfully at $(date)" >> test-results.log
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-results-node${{ matrix.node-version }}
           path: backend/test-results.log
+      - name: Set job start time
+        run: echo "JOB_START_TIME=$(date +%s)" >> $GITHUB_ENV
       - name: Notify Slack (Backend)
         if: always() # always run this step even if tests fail
         uses: slackapi/slack-github-action@v1.25.0
         with:
           payload: |
             {
-              "text": "*Job:* Backend (Node.js ${{ matrix.node-version }})\n*Status:* ${{ job.status }}\n*Workflow:* ${{ github.workflow }}\n*Run:* #${{ github.run_number }}\n*Repo:* ${{ github.repository }}"
+              "text": "*Job:* Backend (Node.js ${{ matrix.node-version }})\\n*Status:* ${{ job.status }}\\n*Duration:* $(( $(date +%s) - ${{ env.JOB_START_TIME }} )) seconds\\n*Workflow:* ${{ github.workflow }}\\n*Run:* #${{ github.run_number }}\\n*Repo:* ${{ github.repository }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -64,13 +67,15 @@ jobs:
           node server.js &
           sleep 3
           curl -I http://localhost:4000
+      - name: Set job start time
+        run: echo "JOB_START_TIME=$(date +%s)" >> $GITHUB_ENV
       - name: Notify Slack (Frontend)
         if: always()
         uses: slackapi/slack-github-action@v1.25.0
         with:
           payload: |
             {
-              "text": "*Job:* Frontend (Node.js ${{ matrix.node-version }})\n*Status:* ${{ job.status }}\n*Workflow:* ${{ github.workflow }}\n*Run:* #${{ github.run_number }}\n*Repo:* ${{ github.repository }}"
+              "text": "*Job:* Frontend (Node.js ${{ matrix.node-version }})\\n*Status:* ${{ job.status }}\\n*Duration:* $(( $(date +%s) - ${{ env.JOB_START_TIME }} )) seconds\\n*Workflow:* ${{ github.workflow }}\\n*Run:* #${{ github.run_number }}\\n*Repo:* ${{ github.repository }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
