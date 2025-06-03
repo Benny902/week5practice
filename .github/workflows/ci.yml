@@ -40,8 +40,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - name: Install frontend dependencies (if any)
-        run: echo "No dependencies for static frontend"
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
       - name: Serve frontend for testing # Adds a final step to validate service availability
         run: |
           cd frontend
