@@ -7,12 +7,15 @@ on: # Runs on every push and pull request
 jobs:
   backend:
     runs-on: ubuntu-latest
+    strategy:
+      matrix: # Defines a matrix for versions
+        node-version: [14, 16, 18]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: ${{ matrix.node-version }}
       - name: Install backend dependencies
         run: |
           cd backend
@@ -20,26 +23,37 @@ jobs:
       - name: Run backend tests
         run: |
           cd backend
-          npm test
+          npm test | tee test-results.log
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results-node${{ matrix.node-version }}
+          path: backend/test-results.log
       - name: Notify Slack (Backend)
         if: always() # always run this step even if tests fail
         uses: slackapi/slack-github-action@v1.25.0
         with:
           payload: |
             {
-              "text": "Backend job ${{ job.status }} in ${{ github.repository }} - ${{ github.workflow }} (#${{ github.run_number }})"
+              "text": "*Job:* Backend (Node.js ${{ matrix.node-version }})\n*Status:* ${{ job.status }}\n*Workflow:* ${{ github.workflow }}\n*Run:* #${{ github.run_number }}\n*Repo:* ${{ github.repository }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        - name: Echo job completion
+          if: success()
+          run: echo "Backend job for Node.js ${{ matrix.node-version }} completed successfully!"
 
   frontend:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14, 16, 18]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: ${{ matrix.node-version }}
       - name: Install frontend dependencies
         run: |
           cd frontend
@@ -56,7 +70,10 @@ jobs:
         with:
           payload: |
             {
-              "text": "Frontend job ${{ job.status }} in ${{ github.repository }} - ${{ github.workflow }} (#${{ github.run_number }})"
+              "text": "*Job:* Frontend (Node.js ${{ matrix.node-version }})\n*Status:* ${{ job.status }}\n*Workflow:* ${{ github.workflow }}\n*Run:* #${{ github.run_number }}\n*Repo:* ${{ github.repository }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Echo job completion
+        if: success()
+        run: echo "Frontend job for Node.js ${{ matrix.node-version }} completed successfully!"
