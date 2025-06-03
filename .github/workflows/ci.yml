@@ -7,11 +7,14 @@ on: # Runs on every push and pull request
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix: # Defines a matrix for versions
+        node-version: [14, 16, 18]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Node.js
         uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+        with: # Confirms the workflow runs once for each version
+          node-version: ${{ matrix.node-version }}
       - run: npm install # Installs dependencies
       - run: npm test # Runs test script
