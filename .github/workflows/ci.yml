@@ -1,27 +1,60 @@
-name: CI Pipeline
+name: Microblog CI
 
 on: # Runs on every push and pull request
   push:
   pull_request:
 
 jobs:
-  test:
+  backend:
     runs-on: ubuntu-latest
-    strategy:
-      matrix: # Defines a matrix for versions
-        node-version: [14, 16, 18]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
-      - run: npm install # Installs dependencies
-      - run: npm test # Runs test script
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
+          node-version: '18'
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm install
+      - name: Run backend tests
+        run: |
+          cd backend
+          npm test
+      - name: Notify Slack (Backend)
+        if: always() # always run this step even if tests fail
+        uses: slackapi/slack-github-action@v1.25.0
         with:
-          name: test-results
-          path: path/to/results
-        - name: Post-job check # Adds a final step to validate service availability
-          run: curl -I <link_to_my_backend.com/health>
+          payload: |
+            {
+              "text": "Backend job ${{ job.status }} in ${{ github.repository }} - ${{ github.workflow }} (#${{ github.run_number }})"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install frontend dependencies (if any)
+        run: echo "No dependencies for static frontend"
+      - name: Serve frontend for testing # Adds a final step to validate service availability
+        run: |
+          cd frontend
+          node server.js &
+          sleep 3
+          curl -I http://localhost:4000
+      - name: Notify Slack (Frontend)
+        if: always()
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": "Frontend job ${{ job.status }} in ${{ github.repository }} - ${{ github.workflow }} (#${{ github.run_number }})"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
