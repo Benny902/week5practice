@@ -86,9 +86,3 @@ jobs:
       - name: Echo job completion
         if: success()
         run: echo "Frontend job for Node.js ${{ matrix.node-version }} completed successfully!"
-      - name: Deploy to GitHub Pages
-        if: matrix.node-version == 18 && github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./frontend
